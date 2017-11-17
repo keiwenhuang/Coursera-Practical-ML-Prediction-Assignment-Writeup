@@ -76,10 +76,13 @@ After data cleaning, we will have 54 variables for the analysis.
 # Model Building
 We will build 3 models using Random Forest, Generalized Boosted Model, and Decision Tree. The model with the highest accuracy rate will be used to answer the quiz questions.
 
+For Cross Validation, we will be using 7-folds Cross Validation.
+
 ### Random Forest
 First of all, we will build a Random Forest model and perform a prediction
 ```{r, cache=TRUE, message=FALSE}
-mod.rf <- randomForest(classe ~., data = df.train)
+mod.rf <- randomForest(classe ~., data = df.train, trControl = trainControl("cv", number = 7))
+mod.rf
 plot(mod.rf)
 ```
 
@@ -92,7 +95,9 @@ result.rf$overall[1]
 
 ### Generalized Boosted Model (GBM)
 ```{r, cache=TRUE, message=FALSE}
-mod.gbm <- train(classe ~., data = df.train, method = "gbm", verbose = FALSE) 
+mod.gbm <- train(classe ~., data = df.train, method = "gbm", verbose = FALSE,
+                 trControl = trainControl(method = "cv", number = 7))
+mod.gbm
 plot(mod.gbm)
 ```
 
@@ -105,7 +110,9 @@ result.gbm$overall[1]
 
 ### Decision Tree
 ```{r, cache=TRUE, message=FALSE}
-mod.rpart <- rpart(classe ~., data = df.train, method = "class")
+mod.rpart <- rpart(classe ~., data = df.train, method = "class",
+                   control = rpart.control(method = "cv", number = 7))
+mod.rpart
 fancyRpartPlot(mod.rpart)
 ```
 
