@@ -73,57 +73,69 @@ dim(df.test)
 ```
 After data cleaning, we will have 54 variables for the analysis.
 
-# Model Building
+# Model Building and Cross Validation
 We will build 3 models using Random Forest, Generalized Boosted Model, and Decision Tree. The model with the highest accuracy rate will be used to answer the quiz questions.
 
-For Cross Validation, we will be using 7-folds Cross Validation.
+For Cross Validation, we will be using 5-folds Cross Validation.
 
 ### Random Forest
-First of all, we will build a Random Forest model and perform a prediction
+First of all, we will build a Random Forest model and perform a prediction.
 ```{r, cache=TRUE, message=FALSE}
-mod.rf <- randomForest(classe ~., data = df.train, trControl = trainControl("cv", number = 7))
-mod.rf
-plot(mod.rf)
+mod.rf <- train(classe ~., data = df.train, method = "rf",
+                trControl = trainControl("cv", number = 5))
+mod.rf$finalModel
+
+
 ```
 
-#### Prediction with Random Forest model
+
+#### Prediction with Random Forest Model
 ```{r, cache=TRUE, message=FALSE}
 pred.rf <- predict(mod.rf, df.test)
 result.rf <- confusionMatrix(pred.rf, df.test$classe)
-result.rf$overall[1]
+accu.rf <- result.rf$overall[1]
+oob.rf <- 1 - result.rf$overall[1]
+
 ```
+The accuracy rate of the Random Forest Model is `r round(accu.rf, 3)`, and the out of sample error is `r round(oob.rf, 3)*100`%.
+
+
 
 ### Generalized Boosted Model (GBM)
+Second, we will build a Generalized Boosted Model.
 ```{r, cache=TRUE, message=FALSE}
 mod.gbm <- train(classe ~., data = df.train, method = "gbm", verbose = FALSE,
-                 trControl = trainControl(method = "cv", number = 7))
+                 trControl = trainControl(method = "cv", number = 5))
 mod.gbm
-plot(mod.gbm)
+
 ```
 
 #### Prediction with Generalized Boosted Model
 ```{r, cache=TRUE, message=FALSE}
 pred.gbm <- predict(mod.gbm, df.test)
 result.gbm <- confusionMatrix(pred.gbm, df.test$classe)
-result.gbm$overall[1]
+accu.gbm <- result.gbm$overall[1]
+oob.gbm <- 1 - result.gbm$overall[1]
 ```
+The accuracy rate of the Generalized Boosted Model is `r round(accu.gbm, 3)`, and the out of sample error is `r round(oob.gbm, 3)*100`%.
+
 
 ### Decision Tree
 ```{r, cache=TRUE, message=FALSE}
-mod.rpart <- rpart(classe ~., data = df.train, method = "class",
-                   control = rpart.control(method = "cv", number = 7))
+mod.rpart <- train(classe ~., data = df.train, method = "rpart")
 mod.rpart
-fancyRpartPlot(mod.rpart)
 ```
 
 #### Prediction with Decision Tree model
 ```{r, cache=TRUE, message=FALSE}
-pred.rpart <- predict(mod.rpart, df.test, type = "class")
+pred.rpart <- predict(mod.rpart, df.test)
 result.rpart <- confusionMatrix(pred.rpart, df.test$classe)
-result.rpart$overall[1]
+accu.rpart <- result.rpart$overall[1]
+oob.rpart <- 1 - result.rpart$overall[1]
 ```
+The accuracy rate of the Decision Tree Model is `r round(accu.rpart, 3)`, and the out of sample error is `r round(oob.rpart, 3)*100`%.
 
-# Selected Model Apply to the Quiz 
+# Result
 From the above result we can see that the Random Forest Model has the highest accuracy rate (`r round(result.rf$overall[1], 3)`), so we will use this model to answer the quiz questions. The result is shown below.
 
 ```{r, cache=TRUE}
